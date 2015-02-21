@@ -10,8 +10,8 @@ simple go into the approraite file to learn more
 
 #Delegations
 delegate the fields between your models
-	```
-	#avoid
+	
+	#avoid ----------------------
 
 	#/models/author.rb
 	class Author < ActiveRecord::Base
@@ -29,7 +29,7 @@ delegate the fields between your models
 	#/views/articles/index.html
 	<%= @article.author.name %>
 
-	#recommended
+	#recommended -------------------
 
 	#/models/author.rb
 	class Author < ActiveRecord::Base
@@ -46,12 +46,12 @@ delegate the fields between your models
 
 	#/views/articles/index.html
 	<%= @article.author_name %> 
-	```
+	
 
 #Using scopes
 Push as much of your database querys into their corresponding model as possible
-	```
-	#avoid
+	
+	#avoid ----------------------
 
 	#/controllers/votes_controller.rb
 	class VotesController < ApplicationController
@@ -63,7 +63,7 @@ Push as much of your database querys into their corresponding model as possible
 		end 
 	end 
 
-	#recomended
+	#recommended -------------------
 
 	#/models/vote.rb
 	class Vote < AcitveRecord::Base
@@ -84,7 +84,7 @@ Push as much of your database querys into their corresponding model as possible
 			@votes_before_now = Vote.before_time(Time.now)
 		end 
 	end 
-	```
+	
 
 #Using Models 
 This one is a great one. Its pretty obvious that you should make your Models as Fat as possible. The problems occurs when your models
