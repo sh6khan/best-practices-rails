@@ -75,6 +75,7 @@ Push as much of your database querys into their corresponding model as possible
 		scope :counted -> {where(not_counted: false)}
 		scope :before_time -> (time) {where('created_at <= ?', time)}
 	end 
+
 	#/controller/votes_controller.rb
 	class VoteController < ApplicationController
 		def index
@@ -84,13 +85,111 @@ Push as much of your database querys into their corresponding model as possible
 			@votes_before_now = Vote.before_time(Time.now)
 		end 
 	end 
-	
 
-#Using Models 
-This one is a great one. Its pretty obvious that you should make your Models as Fat as possible. The problems occurs when your models
+The scopes are not the only way to handle searhers. a scope of
+```
+scope :counted -> {where (not_counted: false)}
+```
+is the exact same as 
+```
+def self.counted
+	where(not_counted: false)
+end 
+```
+
+#Using Modules 
+This is a great one. Its pretty obvious that you should make your Models as Fat as possible. The problems occurs when your models
 suddenly get a little to fat. You will start noticing things that are catoriable with in the model. for example all the methods involving finders
-can be moved to a module. same with generic and repetitive proccessing as well as validations throught the help of concerns
+can be moved to a module. same with generic and repetitive proccessing as well as validations through the help of concerns
 
+	#avoid ----------------
 
+	#/models/report.rb
+	class Report < ActiveRecord::Base
 
+		def export_to_pdf
+			#implementation...
+		end
 
+		def export_to_csv
+			#implementation...
+		end
+
+		def export_to_something_else
+			#implementation...
+		end 
+
+		def self.find_by_date_range
+			#implementation...
+		end 
+
+		def self.find_by_owner (owner)
+			#implementation...
+		end
+
+		def self.advanced_search (fields, option ={})
+			#implementation...
+		end 
+
+		def self.simple_search (fields)
+			#implmentation...
+		end
+
+	end
+
+As you can see, sooner or later this one model will become unmaintable. So the solution is to group the methods together and place them into modules, them import them back in.
+
+	#recomended --------------
+
+	#lib/report_searcher.rb
+	module ReportSearcher
+
+		def advanced_search (feilds, options = {})
+			#implementation...
+		end 
+
+		def simple_search (feilds)
+			#implementation...
+		end
+
+	end
+
+	#lib/reports_finders.rb
+	module ReportFinders
+		def find_by_owner(owner)
+			#implementation...
+		end
+
+		def find_by_date_range
+			#implementation...
+		end 
+
+	end
+
+	#lib/reports_exporters.rb
+	module ReportExporters
+
+		def export_to_something_else
+			#implementation...
+		end 
+
+		def export_to_pdf
+			#implementation...
+		end 
+
+		def export_to_csv
+			#implementation...
+		end
+
+	end
+
+	#/models/report.rb
+	class Report < ActiveRecord::Base
+		extend ReportFinders
+		extend ReportSearcher
+		include ReportExporter
+	end 
+
+The difference between include and extend is simple. they load in the methods from the modules as class and instance methods repspectively. in other words, if you method originally had self.method_name and was then placed inside of a module along with others, the that module would be loaded in to the Report Model through extend
+
+#
