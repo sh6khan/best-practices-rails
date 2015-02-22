@@ -192,4 +192,55 @@ As you can see, sooner or later this one model will become unmaintable. So the s
 
 The difference between include and extend is simple. they load in the methods from the modules as class and instance methods repspectively. in other words, if you method originally had self.method_name and was then placed inside of a module along with others, the that module would be loaded in to the Report Model through extend
 
-#
+#MetaProgramming
+One of the interesting things about ruby in general is that Ruby is code is just text, nothing more and nothing less. What does this mean? It means you can have your code , create more code. The following example may not be releastice, but if you ever find your self in a similiar situation, definitly give meta programming a try.
+
+	#avoid -------------
+
+	#/models/vehicle.rb
+	class Vehicle < ActiveRecord::Base
+		
+		def self.find_all_bmw
+			where(manufacture: "bmw")
+		end 
+
+		def self.find_all_toyota
+			where(manufacture: "toyota")
+		end 
+
+		def self.find_all_kia
+			where(manufacture: "kia")
+		end
+
+		def self.find_all_honda
+			where(manfacture: "honda")
+		end
+
+		..... etc.
+
+	end 
+
+What we have here is  a very repetitive set of finders and checkers. So lets try and and create these methods with some meta programming
+
+	#recommended--------------
+
+	#/models/vehicle.rb
+	class Vehcile < ActiveRecord::Base
+
+		MANS = %w(honda, kia, bmw, toyota)
+
+		class << self
+
+		MANS.each do |brand|
+			define_method "find_all_#{brand}"
+				where(manufacture: #{brand})
+			end
+		end
+
+	end
+
+As you can see, this is much much cleaner and just one of the cool things about Ruby. notice how the MANS array is a contsant (based on the first letter being a capital). also notice the class << self.
+this is a way of making the following methods auto matically include self to the beggining of each method name
+
+
+	
