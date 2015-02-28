@@ -192,6 +192,52 @@ As you can see, sooner or later this one model will become unmaintable. So the s
 
 The difference between include and extend is simple. they load in the methods from the modules as class and instance methods repspectively. in other words, if you method originally had self.method_name and was then placed inside of a module along with others, the that module would be loaded in to the Report Model through extend
 
+#Use Select
+If you only need 5 columns out of the 50 column table then white list them. It will greatly improve the performace of your app, as improper databse queries can really hurt
+
+	#recomended-----------
+
+	#lets say you only need the name, id and created_at columns from the user table
+	class User < ActiveRecord::Base
+		has_many :arcticles
+
+		scope :current_users -> {where(fired: false).select(:name, :id, :created_at)}
+	end
+
+If you get the chance, compare select statments like theses to normal ones where you load in all data in side the rails console. Right next to the sql query you can see how long it took, I have seen the use of th select method reduce a query to 30% of the original time
+
+#Use pluck
+use :pluck instead of a combination of :select and :map. This is only efective for when you need the values from your querys in the form on an array. 
+	#avoid -------------
+	class Station < ActiveRecord::Base
+
+		#this will return an array of all station_id's
+		def self.get_station_ids
+			select(:id).map{|station| Station.id}
+		end
+
+	end 
+
+	#recomended---------
+	class Station < ActiveRecord::Bse
+		def self.get_station_ids
+			pluck(:id)
+		end
+	end
+not only is this less code but its also faster. See when you run the select command you are still loading in the active record objcts, this is a waste when right afterwards your simply extracking all the ID's. ;pluck allows you to retrieve those values with have to waste loading in the active records
+
+#Use try
+This is something that I never knew extisted untill recenttly and it goes a long way to cleaning up your code 
+	#avoid ------------
+
+	User.find(10).name
+
+	#recomended -------
+
+	User.find(10).try(:name)
+the try method will return nil instead of raise an error and breaking the app when User.find(10) does not exist
+
+
 #MetaProgramming
 One of the interesting things about ruby in general is that Ruby is code is just text, nothing more and nothing less. What does this mean? It means you can have your code , create more code. The following example may not be releastice, but if you ever find your self in a similiar situation, definitly give meta programming a try.
 
@@ -241,6 +287,22 @@ What we have here is  a very repetitive set of finders and checkers. So lets try
 
 As you can see, this is much much cleaner and just one of the cool things about Ruby. notice how the MANS array is a contsant (based on the first letter being a capital). also notice the class << self.
 this is a way of making the following methods auto matically include self to the beggining of each method name
+
+# Semantic View Helpers
+
+When you want to apply some css and javascript to your views you can use the build in Rails semantic view helpers to greatly reduce the amount of ugly code that you have to write 
+	#avoid--------------
+
+	#/views/posts/index.html.erb
+	<div class="posts" id="post_<%= @post.id %>" >
+
+
+	#recomended----------
+	
+	#views/posts/index.html.erb
+	<%= div_for @posts %>
+
+
 
 
 	
