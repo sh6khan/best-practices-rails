@@ -302,6 +302,18 @@ When you want to apply some css and javascript to your views you can use the bui
 	#views/posts/index.html.erb
 	<%= div_for @posts %>
 
+# Find_each vs all
+
+the find_each method does the exact same thing as .all.each, however it processess the model as a batch.
+The size of the batch can be changed changed with the :batch_size options. Therefore if your iterating over a large number of records ( > 1000) then find_each is the  way to go. Otherwise, all
+
+	#recomended------------- 
+	Billing.find_each do |bill|
+		puts bill.amount
+	end
+
+
+
 
 
 
