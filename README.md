@@ -305,12 +305,125 @@ When you want to apply some css and javascript to your views you can use the bui
 # Find_each vs all
 
 the find_each method does the exact same thing as .all.each, however it processess the model as a batch.
-The size of the batch can be changed changed with the :batch_size options. Therefore if your iterating over a large number of records ( > 1000) then find_each is the  way to go. Otherwise, all
+The size of the batch can be changed changed with the :batch_size options. Therefore if your iterating over a large number of records ( > 1000) then find_each is the  way to go. Otherwise, all works fine
 
 	#recomended------------- 
 	Billing.find_each do |bill|
 		puts bill.amount
 	end
+
+#The N+1 Query 
+
+A General room thumb is that you make one large query rather than 500 small ones. You can see exactly the kind and number of queries that you are making from with in the development log file. Lets first start by looking at the view
+
+	<% @students.each do |student| %>
+		<%= student.first_name %>
+		<%= student.last_name %>
+		<%= student.teacher.name %>
+	<% end %>
+
+Here we have a `:has_many` relation ship between `:teacher` and `:student`. This addvice does not affect view, If you have this in your view, your fine.
+
+	class StudentsController < ApplicationControler
+		def index
+			@students = Student.all
+		end 
+	end 
+
+So, to elobrate on the problem, when we make the initial query for the students that our (+1), and lets say that there are N records that `Student.all` returns. Thereforefore, when we look into the view we see the query that is being made to find the associated teachers name. This is the N query, (1 query for each of the N students). 
+
+To fix this, we can use `includes`
+
+	class StudentsController < ApplicationController 
+		def index
+			@student = Student.all.includes(:teacher)
+		end 
+	end
+
+Looking at the SQL query, what this does is combines all the teachers and students where `teacher_id` on the student table matches up with `id` column of the teacher  table, it then takes the combined and loads them all in as a batch. Therefore, any all to @student.teacher happens instantly because they have already been loaded in!
+
+#Has many through vs has and belongs to many 
+
+It took me a while before I fully understood this myself. But the `has many through` is virtually the same as the `has and belongs to many`. The reason where you want to use one over the other is if the joing table has additional feilds outside of the two `:belongs_to` feilds. 
+
+	class Owner < ActiveRecord::Base
+		belongs_to :ticket
+		belongs_to :user
+	end 
+
+	class Ticket < ActiveRecord::Base
+		has_many :owners
+		has_many :users, through: :owners
+	end 
+
+	class User < ActiveRecord::Base
+		has_many :owners
+		has_many :tickets, through: :owner
+	end 
+
+In this case the Owner model acts as the join model. There is a very likely chance the Owner model wont even have a corresponding controller, It acts as just a model for the join table that exists between Users and Ticket. As such, you can use them the same way.
+
+To add a tickect to a user
+	first_user  << random_ticket
+
+
+#knowing SQL 
+
+honestly, this is probobly one of the best peices of advice that you can get in this article. Most of these other things, are general suggestions practices, But this next one is a bit different. knowing SQL can greatly improve the performace of your site
+
+Its very common to see people be lazy and use the rails active record methods when ever they need to interact with the database, but this has two problems. One it creates a lot of over head and two there is very large chace that things will happend in a very effecient way.
+
+`Job.count`, This creates an SQl query to find the number job records there are in your database. 
+`Job.length`, This will first load in all Jobs and then apply the length method. 
+
+NOTE: If you ever wanted to know how the length function works, It goes a little like this. First we load in the data, and see how much memory it holds all together. It then looks at how much memory a single element takes up. It then divide!
+
+Lets say you had a relation where  a Person `:has_many` Jobs. Now this means there are records in the Person class that do not have jobs. i.e Person.find_by_name(JoblessJoe).jobs will return an empty active::record:collection (an empty array more or less). Now lets say that you want a query to return only the Person records where person has at least one job. 
+
+	scope :has_at_least_one_job, lambda {
+		joins('LEFT OUTER JOIN job ON person.id = job.person_id')
+		.group('person.id')
+		.having('count(job.person_id) > 0')
+	}
+
+This a great example of how we can combine Rails and SQL to make super fast queries.
+
+The above is just one of the ways that knowing SQL properly can help alot. This isnt a guide has to how to learn SQL, so unfortonatly we will be moving on
+
+#Reduce your routes
+
+A general rule in programming is to black list where ever we can. We do this for a lot of reasons, one it makes things faster as we saw with the `select` method and two, it goes a long way to unclutter your app. This idea can also be applied to Routes. 
+
+lets say you were dealing with an app where the model `:device` does not have the ability to create, update or destroy. Instead they are ported in through some sort of  ruby script. Therefor there is really no need to include te routes to those ation.
+	
+	#avoid -------------
+
+	resource :devices 
+
+	#recomended ---------
+
+	resources only:[:index, show] :devices
+
+
+If you wanted to add some additional routes 
+	
+	resources :devices do 
+		member do 
+			get :battery
+			post :update_with_pool
+		end 
+
+		collection do 
+			get :locations
+		end 
+	end 
+
+
+
+
+
+
+
 
 
 
