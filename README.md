@@ -367,6 +367,40 @@ To add a tickect to a user
 	first_user  << random_ticket
 
 
+# Using polymorphic associations
+I truly belive this is one of those topics that needs much better documentation from the rails guide. It took me a lot of scouring and experminting before I fully understood this my self. 
+
+So lets say you have two types of Events, one is a Online event and the other is a InPerson event. Now both of these events has many attendants, one way of implementing this is with two types of `attendant` models, first you have the `InPersonAttendant` and then you have the `OnlineAttendant`.Now this may seem sort of redundant to you and you might be asking yourself why not just build the `Attendant` model so that it has 2 foriegn keys (in_person_event_id, online_event_id)  and an `event_type`('InPerson','Online' ) field. And that is essentialy what a polymorphic association is !
+
+Lets look at the code 
+	class Person < ActiveRecord::Base
+		belongs_to :attendant, polymorphic: true
+	end 
+
+	#notice how the Person class does not :belong_to either InPersonEvent or OnlineEvent
+
+	class OnlineEvent < ActiveRecord::Base
+		has_many :online_attendants, as: :attendant
+	end 
+
+	#notice how there is no direct refernce to the Person class
+
+	class InPersonEvent < ActiveRecord::Base
+		has_many :in_person_attendants, as: :attendant
+	end 
+
+	#notice how there is no direct refrence to the Person class
+
+And there you have it ! A beautiful polymorphic association. Now notice how `attendant` servers as the middle man between the Person class and the InPersonEvent and OnlineEvent Classes. 
+
+If your wondering about naming conventions its simple, the `:attendant` could have been anything we wanted so long as it matched in all three classes. The `:in_person_attendants` and `:online_attendants` could have also been anything we wanted. 
+
+Now to use this association in action is simple. It works just like a `:has_many` association. 
+
+	OnlineEvent.first.online_attendants
+
+	InPersonEvent.first.in_person_attendants
+	
 #knowing SQL 
 
 honestly, this is probobly one of the best peices of advice that you can get in this article. Most of these other things, are general suggestions practices, But this next one is a bit different. knowing SQL can greatly improve the performace of your site
