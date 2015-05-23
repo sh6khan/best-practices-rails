@@ -26,8 +26,10 @@ end
 
 #/views/articles/index.html
 <%= @article.author.name %>
+```
 
-#good
+```ruby
+# good
 
 #/models/author.rb
 class Author < ActiveRecord::Base
