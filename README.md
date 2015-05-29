@@ -1,11 +1,28 @@
 # best-practices-rails
-Just a collection of some of the Rails best practices I have found over the past year since learning Rails
+Just a collection of some of the Rails best practices I have found over the past 2 years since learning Rails
 
-#Overview 
-For the most part these guides wont go to far into the inner workings of rails, instead looking at the little things that you could do to better your code. 
+# Resource
 
+Inspired from [Rails AntiPatterns](#http://railsantipatterns.com)
+
+# Overview
+
+1. [Delegations](#delegations)
+1. [Scopes](#using-scopes)
+1. [Modules](#using-modules)
+1. [Select](#use-select)
+1. [Pluck](#use-pluck)
+1. [try](#use-try)
+1. [MetaProgramming](#metaprogramming)
+1. [Semantic View Helper](#semantic-view-helper)
+1. [find_all vs all ](#find_all-vs-all)
+1. [The N+1 Query](#the-n+1-query)
+1. [Using polymorphic associations](#using-polymorphic associations)
+1. [knowing SQL](#knowing-sql)
+1. [Reduce Your Routes](#reduce-your-routes)
 
 #Delegations
+
 delegate the fields between your models
 
 ```ruby
